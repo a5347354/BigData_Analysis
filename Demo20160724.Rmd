@@ -1,0 +1,49 @@
+---
+title: "Demo20160724"
+author: "Luke Fan"
+date: "2016年7月24日"
+output: html_document
+---
+# 大數據R-Lab4
+## 複習爬蟲 Homework
+```{r}
+library(rvest)
+freenewurl = read_html("http://news.ltn.com.tw/list/BreakingNews") %>% html_nodes(".lipic")
+title = freenewurl %>% html_nodes("a.picword") %>% html_text()
+link = freenewurl %>% html_nodes("a.picword") %>% html_attr("href")
+time = freenewurl %>% html_nodes("span") %>% html_text()
+
+# CSS抓取
+library(stringr)
+category = freenewurl %>% html_nodes("span a") %>% html_attr("class")
+
+css = read_html("http://news.ltn.com.tw/css/news/style.css?201509", encoding = "UTF-8")
+#.list span a.tab3:after{content:"社會";}
+#.list span a.tab2:after{content:"政治";}
+map_table = css %>% str_match_all(pattern=  '.list span a.(.*?):after\\{content:"(.*?)";.*\\}', string =.)
+map_table[[1]][,1]
+map_table[[1]][,2]
+map_list = list()
+map_list[map_table[[1]][,2]] = map_table[[1]][,3]
+map_list
+tag = map_list[category] %>% unlist()
+df = data.frame(time = time, link = link, title = title, category = tag)
+df
+
+#內容
+
+```
+
+# 連接Amazon MySQL資料庫
+```{r}
+#使用RMySQL
+#install.packages("RMySQL")
+library (RMySQL)
+mydb = dbConnect(MySQL(), dbname="db_apollo",
+             user="apollo_luke",
+             password="ntubapollo",
+             host='apollo.c5nmzua4idfl.us-west-2.rds.amazonaws.com')
+dbDisconnect(mydb)
+
+```
+

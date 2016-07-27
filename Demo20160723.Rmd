@@ -1,0 +1,250 @@
+---
+title: "Demo20160723"
+author: "Luke Fan"
+date: "2016年7月23日"
+output: html_document
+---
+## R 與資料視覺化( R 基本繪圖功能與googleVis)
+#低級繪圖套件 package - graphics
+```{r}
+## 產生出各種線條的line圖
+x = seq(1,6)
+y = x
+## 設定所有圖的layout，mfrow = c(列,欄)
+types = c("p","l","o","b","c","s","h","n")
+for(i in 1:length(types)){
+  title = paste("type:",types[i])
+  plot(x,y,type ="n", main = title)
+  lines(x,y,type = types[i])
+}
+```
+
+```{r}
+## 只有一組變數
+x = seq(1,6)
+y = x
+## 設定所有圖的layout，mfrow = c(列,欄)
+par(mfrow = c(2,4))
+types = c("p","l","o","b","c","s","h","n")
+for(i in 1 : length(types)){
+  title = paste("type:",types)
+  plot(x,y,type = types[i], main = title[i])
+}
+par(mfrow = c(2,2))
+for(i in 1 : length(types)){
+  title = paste("type:",types)
+  plot(x,y,type = types[i], main = title[i])
+}
+```
+
+## BarChat針對類別Qualitative
+```{r}
+housePrice = read.csv("riii-master/data/house-prices.csv", header = TRUE)
+bedrooms =  housePrice$Bedrooms
+bedroomsTable = table(bedrooms)
+barplot(bedroomsTable, main = "Bedroom Type Calulate", xlab = "bedroom type", ylab = "count")
+```
+
+## Histogram 針對區間，觀察分佈狀況(連續分佈)
+```{r}
+## break有幾個區間，而不是區間間距，但演算法會自動調配區間個數
+load(file = "riii-master/Statistics/cdc.Rdata")
+View(cdc)
+weight = cdc$weight
+hist(weight, breaks = 50)
+```
+
+
+## Pie圖
+```{r}
+## rainbow參數可以自行上色
+housePrice = read.csv(file = "riii-master/data/house-prices.csv", header = TRUE)
+bedrooms = housePrice$Bedrooms
+bedroomsTable = table(bedrooms)
+labels = c("2 unit", "3 unit", "4 unit", "5 unit")
+pie(bedroomsTable, labels = labels, col = rainbow(length(labels)), main = "Pie Chart of Bedroom")
+```
+
+## Scatter Plot
+```{r}
+load("riii-master/Statistics/cdc.Rdata")
+plot(cdc$weight,cdc$height)
+
+data(iris)
+xlab = names(iris)[1]
+ylab = names(iris)[3]
+x = iris[,1]
+y = iris[,3]
+plot(x,y,xlab = xlab, ylab = ylab, col = ifelse(iris[,3]>median(iris[,3]),"red","blue"))
+
+
+data(iris)
+xlab = names(iris)[1]
+ylab = names(iris)[3]
+x = iris[,1]
+y = iris[,3]
+plot(x, y, xlab=xlab, ylab=ylab,type="n")
+setosa = which(iris$Species=="setosa") 
+versicolor = which(iris$Species=="versicolor") 
+points(iris[setosa,1],iris[setosa,3],col="green") 
+points(iris[versicolor ,1],iris[versicolor,3],col="red")
+```
+
+
+## Linear Regression
+```{r}
+plot(cdc$weight, cdc$wtdesire, xlab="weigth",ylab="weight desire", main="Scatter of Weight")
+abline(lm(cdc$weight~cdc $wtdesire),col="red")
+```
+
+
+
+## Mosaic Chat 顯示類別資料
+```{r}
+smokers_gender = table(cdc$gender, cdc$smoke100) 
+colnames(smokers_gender) = c("no","yes") 
+mosaicplot(smokers_gender,col=rainbow(length(colnames(smokers_gender))))
+```
+
+## Box Chart
+
+```{r}
+boxplot(cdc$height, ylab="Height",
+main="Box Plot of Height")
+
+boxplot(cdc$height ~ cdc$gender ,ylab="Height",xlab="Gender",main="Height vs Gender")
+```
+
+
+## Steam 經驗圖
+```{r}
+height = c(150, 155, 160, 162, 168, 171, 173, 175, 178, 182, 185) 
+stem(height)
+```
+
+## 全局圖形設定函數 : par()
+```{r}
+showLayout = function(n){
+  for(i in 1:n){
+    plot(1, type = "n", xaxt = "n",yaxt = "n",xlab = "",ylab = "")
+    text(1,1,label = i,cex = 10)
+  } 
+}
+
+## margin邊界，mfrow先填滿row，mfcol先填滿col
+par(mar=c(1,1,1,1), mfrow = c(3,2))
+showLayout(6)
+
+par(mar=c(2,2,2,2), mfrow = c(3,2))
+showLayout(6)
+
+par(mar=c(3,3,3,3), mfcol = c(3,2))
+showLayout(6)
+```
+
+## layout函數 - 不規則畫布
+```{r}
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(1,1,2,3),2,2,byrow=TRUE) 
+layout(mat1)
+mat1
+showLayout(3)
+
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(1,1,2,3),2,2,byrow=TRUE) 
+layout(mat1,widths=c(4,1))
+mat1
+showLayout(3)
+
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(1,1,2,3),2,2,byrow=TRUE) 
+layout(mat1,heights=c(3,1))
+mat1
+showLayout(3)
+
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(1,0,2,3),2,2,byrow=TRUE) 
+layout(mat1, widths=c(2,1),heights=c(3,1))
+mat1
+showLayout(3)
+
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(1,0,2,3),2,2,byrow=TRUE) 
+layout(mat1, widths=c(2,1),heights=c(3,1)) 
+mat1
+showLayout(3)
+```
+
+## HomeWork
+```{r}
+par(mar=c(1,1,1,1))
+mat1 = matrix(c(0,1,0,2,3,4,0,5,0),3,3,byrow=TRUE) 
+layout(mat1) 
+mat1
+showLayout(5)
+```
+
+# 高級繪圖套件 plotly
+## Area chat (type = "pie")
+```{r}
+library(plotly)
+ds <- data.frame(labels = c("A", "B", "C"),
+values = c(10, 20, 30))
+plot_ly(ds, labels = labels, values = values, type = "pie", hole=0.6) %>% layout(title = "Donut Chart Example")
+```
+
+## AreaChat
+```{r}
+# fill="tozeroy" => to zero y 從y開始填滿
+library(plotly)
+month<- c(1,2,3,4,5)
+taipei<- c(92.5,132.6,168.8,159.1,218.7)
+tainan <- c(21.2, 30.6, 37.3, 84.6, 184.3)
+y <- list(title="Rainfall")
+plot_ly(x = month, y = taipei, fill = "tozeroy", name="taipei") %>% add_trace(x = month, y = tainan, fill = "tozeroy",name="tainan") %>% layout(yaxis = y)
+
+
+# 加總
+library(plotly)
+month<- c(1,2,3,4,5)
+taipei<- c(92.5,132.6,168.8,159.1,218.7)
+tainan <- c(21.2, 30.6, 37.3, 84.6, 184.3)
+total <- taipei + tainan
+y <- list(title="Rainfall")
+plot_ly(x = month, y = taipei, fill = "tozeroy", name="taipei") %>% add_trace(x = month, y = total, fill = "tonexty", name="tainan") %>% layout(yaxis = y)
+```
+
+### Bubble Chart ：與Scatter Chat多了第三維 mode = markers
+```{r}
+# sample(nrow(diamonds),1000)產生亂數
+library(plotly)
+d <- diamonds[sample(nrow(diamonds),1000), ]
+plot_ly(d, x = carat, y = price, text = paste("Clarity:", clarity),
+mode = "markers", color = clarity, size = carat)
+```
+
+### Heat Map  mode = heatmap
+```{r}
+plot_ly(z = volcano, colorscale = "Hot", type = "heatmap")
+
+m <- matrix(rnorm(9), nrow = 3, ncol = 3) 
+plot_ly(z = m,
+x = c("a", "b", "c"), y = c("d", "e", "f"), type = "heatmap")
+```
+
+
+
+### Heat Map 畫地圖 mode = choropleth
+
+## subplot()
+```{r}
+p <- subplot(
+plot_ly(economics, x = date, y = uempmed), plot_ly(economics, x = date, y = unemploy), margin = 0.05) %>% layout(showlegend = FALSE)
+```
+
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+---
+title: "Homework-1-20160717"
+author: "Luke Fan"
+date: "2016年7月13日"
+output: html_document
+---
+### 請使用R語言撰寫一可以抓取自由時報即時新聞 (http://news.ltn.com.tw/list/BreakingNews) 的爬蟲程式,該爬蟲需能夠爬取首頁列表文章的標題、時間、以及內文連結等資訊(如下圖所示),並將資料整理成一名為 ltn_news 的Data Frame。
+* Data Frame內的欄位:標題、時間、以及內文連結必須各命名為 title, datetime, url
+
+* 每位學員需將該爬蟲程式存成 homework\_1\_<學員ID>.R 檔(e.g. 如果學員ID為001,則繳交程式必須命名為homeword_1_001.R)
+
+* 如果學員可以整理出類別資訊,並增添到Data Frame 中(欄位名稱需命名為category ) ,可獲得 額外加分
+```{r}
+library(rvest)
+newsurl = 'http://news.ltn.com.tw/list/BreakingNews'
+news = read_html(newsurl)
+title = news %>% html_nodes(".picword") %>% html_text()
+datetime = news %>% html_nodes(".lipic span") %>% html_text()
+url = news %>% html_nodes(".picword") %>% html_attr("href")
+tab = news %>% html_nodes(".lipic span") %>% html_attr("class")
+tab
+ltn_news = data.frame(title = title, datetime = datetime, url = url)
+ltn_news
+#抓取ＣＳＳ
+css <-  read_html('http://news.ltn.com.tw/css/news/style.css?201509', encoding='UTF-8')
+
+library(stringr)
+#使用正規表達式
+#.list span a.tab1:after{content:"焦點";}
+#.list span a.tab2:after{content:"政治";}
+map_table <- css   %>%  iconv(from='UTF-8', to='UTF-8') %>% str_match_all(pattern='.list span a.(.*?):after\\{content:"(.*?)";\\}', string =.)   
+map_list = list()
+map_list[map_table[[1]][,2]] = map_table[[1]][,3]
+#category = sapply(category, function(e)map_list[e]) %>% unlist()
+#ltn_news = data.frame(title = title, datetime = datetime, url = url, category = category)
+```
+
