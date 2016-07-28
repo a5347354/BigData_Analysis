@@ -43,7 +43,44 @@ mydb = dbConnect(MySQL(), dbname="db_apollo",
              user="apollo_luke",
              password="ntubapollo",
              host='apollo.c5nmzua4idfl.us-west-2.rds.amazonaws.com')
+# 建立表格Create Table
+dbWriteTable(mydb, "iris", iris)
+# 列出有哪些表Table
+dbListTables(mydb)
+# 讀取iris Table
+dbReadTable(mydb,"iris") %>% head(.,5)
+
+# 中斷連線
 dbDisconnect(mydb)
 
 ```
+
+##SQL-Select語法
+```{r}
+#連接資料庫
+mydb = dbConnect(MySQL(), dbname="db_apollo",
+             user="apollo_luke",
+             password="ntubapollo",
+             host='apollo.c5nmzua4idfl.us-west-2.rds.amazonaws.com')
+res = dbGetQuery(mydb, "Select * From iris")
+head(res,5)
+#連接結束
+dbDisconnect(mydb)
+```
+
+## 刪除Table
+```{r}
+#連接資料庫
+mydb = dbConnect(MySQL(), dbname="db_apollo",
+             user="apollo_luke",
+             password="ntubapollo",
+             host='apollo.c5nmzua4idfl.us-west-2.rds.amazonaws.com')
+if(dbExistsTable(mydb,"iris"))
+  dbRemoveTable(mydb,"iris")
+dbListTables(mydb)
+
+#連接結束
+dbDisconnect(mydb)
+```
+
 
