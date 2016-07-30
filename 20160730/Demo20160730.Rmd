@@ -1,0 +1,251 @@
+---
+title: "Demo20160730_TextMining"
+author: "Luke Fan"
+date: "2016年7月30日"
+output: html_document
+---
+# TextMining
+## 斷句
+```{r}
+s1 = 'I love this book'
+strsplit(s1,' ')
+s2 = '我喜歡這本書'
+# 這樣該如何斷句？
+```
+
+## NLP套件
+```{r}
+# install.packages("NLP")
+library(NLP)
+
+# 產生tri-gram(2-gram)
+str1 <-strsplit(x="那我們酸民婉君也可以報名嗎", split='')
+bigram <-ngrams(unlist(str1), 2)
+vapply(bigram, paste, "", collapse ="")
+
+# 產生tri-gram(3-gram)
+str2 <- strsplit(x="那我們酸民婉君也可以報名嗎", split ='') 
+trigram <-ngrams(unlist(str2), 3)
+vapply(trigram, paste, "", collapse = "")
+```
+## 找出出現兩次以上的詞
+```{r}
+article <- "身兼中華職棒聯盟會長的國民黨立委吳志揚今天透露,台灣積極爭取 的2017世界棒球經典賽分區預賽主辦權,因為大巨蛋遲遲無法孵出來,確定被 競爭對手韓國拿走。吳志揚批評,當初中央政府拿台北市的精華地跟北市府交換 ,就是希望在大巨蛋現址成立體育園區,就如果北市府要改變使用目的,教育部 都漠不關心,部長跟體育署長乾脆下台。"
+
+#將每個字分開
+w <- strsplit(x=article, split ='')
+#2個字分為一組
+bigram <-ngrams(unlist(w), 2)
+#"身兼中華" => "身兼" ＋ "兼中" + "中華"
+bigram_str <- vapply(bigram, paste, "", collapse = "") 
+# 利用table快速做統計
+tb <- table(bigram_str)
+# 列出統計超過兩次字詞
+tb[tb>=2]
+
+#斷句
+strsplit(article, "、|,|。")
+
+#斷句後再做n-gram
+a.split <- strsplit(article, "、|,|。")
+w.split <- strsplit(x=unlist(a.split), split ='')
+bigram <- function(w){
+  bigram <-ngrams(unlist(w), 2)
+  bigram.str <- vapply(bigram, paste, "", collapse = " ") 
+  bigram.str
+}
+bigram.all <- sapply(w.split, bigram) 
+tb <- table(unlist(bigram.all)) 
+tb[tb>=2]
+```
+
+
+#長詞優先演算法Lontern-fast
+```{r}
+# 移除關鍵字
+s = "當初中央政府拿台北市的精華地跟北市府交換" 
+s.split = strsplit(s, '台北市')
+paste(unlist(s.split), collapse = "", sep="")
+
+
+
+#建立移除關鍵字函式
+removekey <- function(s, keys){ 
+  for (key in keys){
+    s.split = strsplit(s, key)
+    s = paste(unlist(s.split), collapse = "", sep="") 
+  }
+  s
+}
+removekey("當初中央政府拿台北市的精華地跟北市 府交換", c("台北市", "中央"))
+
+
+
+#建立ngram斷詞函式
+ngram.func <- function(w, n){
+  n.gram <-ngrams(unlist(w), n)
+  n.gram.str <- vapply(n.gram, paste, "", collapse = "") 
+  n.gram.str
+}
+
+
+#實作長詞優先斷詞
+article = '陳冠希日前開砲怒罵林志玲「婊子」引發不少風波，今(29日)陳冠希現身透露曾3度找林志玲方面談話，有意私下解決，沒想到對方冷處理，才逼他出面開砲，稍早林志玲其中一位經紀人閻柔怡表示，陳冠希一個月前的確透過朋友傳話，但只有兩次，內容則是：「《我的新衣》是不是林志玲不讓秦舒培參加？」
+
+據《蘋果日報》報導，閻柔怡稍早證實一個月前曾接到兩方中間朋友來電，陳冠希要他帶話問：「《我的新衣》是不是林志玲不讓秦舒培參加？」但閻柔怡表示林志玲僅是受邀參加的嘉賓，認為其中出了誤會，第二天同位友人又再打來，問一樣的問題，閻柔怡仍則給出一樣的答覆。
+
+閻柔怡說，當時不感覺對方有怒氣，所以以為事情應該就這樣告一段落，對於陳冠希今透露早告知對方：「我是瘋子，我會罵你啊！」閻柔怡則說沒聽到這句話，而該節目製作人曹青稍早改口表示，劉雯、何穗、秦舒培、孫菲菲等人確實一開始在同一類別「高冷超模女神」的嘉賓候選人中，但節目組最後選擇何穗，因此嚴格說起來擠掉秦舒培的非林志玲，而是何穗。'
+longTermFirst <- function(article, keywords){
+  for(i in seq(4,2,-1)){
+    article = removekey(article, keywords)
+    a.split <- strsplit(article, "、|，|。")
+    w.split <- strsplit(x=unlist(a.split), split ='')
+    n.gram.all <- sapply(w.split, function(e) ngram.func(e,i))
+    
+    tb <- table(unlist(n.gram.all))
+    candidate <- names(tb[tb>=5])
+    keywords = c(keywords, candidate)
+  }
+  keywords
+}
+
+keywords = c()
+longTermFirst(article, keywords)
+```
+
+#jiebaR 結巴R 斷詞工具（原在python）
+```{r}
+# install.packages("jiebaR")
+library(jiebaR)
+article = '陳冠希日前開砲怒罵林志玲「婊子」引發不少風波，今(29日)陳冠希現身透露曾3度找林志玲方面談話，有意私下解決，沒想到對方冷處理，才逼他出面開砲，稍早林志玲其中一位經紀人閻柔怡表示，陳冠希一個月前的確透過朋友傳話，但只有兩次，內容則是：「《我的新衣》是不是林志玲不讓秦舒培參加？」
+
+據《蘋果日報》報導，閻柔怡稍早證實一個月前曾接到兩方中間朋友來電，陳冠希要他帶話問：「《我的新衣》是不是林志玲不讓秦舒培參加？」但閻柔怡表示林志玲僅是受邀參加的嘉賓，認為其中出了誤會，第二天同位友人又再打來，問一樣的問題，閻柔怡仍則給出一樣的答覆。
+
+閻柔怡說，當時不感覺對方有怒氣，所以以為事情應該就這樣告一段落，對於陳冠希今透露早告知對方：「我是瘋子，我會罵你啊！」閻柔怡則說沒聽到這句話，而該節目製作人曹青稍早改口表示，劉雯、何穗、秦舒培、孫菲菲等人確實一開始在同一類別「高冷超模女神」的嘉賓候選人中，但節目組最後選擇何穗，因此嚴格說起來擠掉秦舒培的非林志玲，而是何穗。'
+segmenter = worker()
+segmenter <= article 
+
+#jiebaR字典=>為中國日報某一年的報作為字典
+#  edit_dict()
+#查詢字典路徑檔
+USERPATH
+```
+
+##抓出詞性
+```{r}
+s="那我們酸民婉君也可以報名嗎" 
+mixseg = worker()
+segment(code= s , jiebar = mixseg)
+tagseg = worker('tag')
+segment(s, tagseg)
+
+```
+
+##計算關鍵字
+```{r}
+s="那我們酸民婉君也可以報名嗎"
+key = worker('keywords', topn = 3)
+key <= s
+```
+
+##計算字詞重要性
+```{r}
+#建立文章
+a <- c("a")
+abb <- c("a", "b", "b")
+abc <- c("a", "b", "c")
+D <- list(a, abb, abc)
+
+tfidf <- function(t,d, D){
+  tf <- table(d)[names(table(d)) == t]/ sum(table(d))
+  idf <- log(length(D) /sum(sapply(D, function(e) t %in% e)))
+  tf*idf
+}
+
+#計算字詞在文章中的重要性
+tfidf('a',a,D)
+
+tf1 = table(a)[names(table(a)) == 'a'] / sum(table(a))
+idf1 = log(length(D) / sum(sapply(D, function(e) 'a' %in% e)))
+
+tfidf('b',abb,D)
+
+tf2 = table(abb)[names(table(abb)) == 'b'] / sum(table(abb))
+idf2 = log(length(D) / sum(sapply(D, function(e) 'b' %in% e)))
+tf2 * idf2
+
+tfidf('b',abc,D)
+tfidf('c',abc,D)
+```
+
+##製作文字雲
+```{r}
+library(jiebaR)
+download.file('https://raw.githubusercontent.com/ywchiu/rtibame/master/data/applenews.RData', 'applenews.RData')
+load('applenews.RData')
+str(applenews)
+
+mixseg = worker()
+#尋找相關主題
+content <- applenews$content[grepl('肯亞', applenews$content)]
+seg.str <- segment(code=content, mixseg)
+seg.tb <- table(seg.str)
+seg.tb <- seg.tb[nchar(names(seg.tb)) >= 2]
+tb <- sort(seg.tb, decreasing = TRUE)[0:100]
+
+#文字雲
+#install.packages("wordcloud")
+library(wordcloud)
+#修正亂碼
+par(family='STKaiti')
+par(family='Heiti TC Light')
+wordcloud(names(tb), tb, , min.freq = 1, random.order = F, ordered.colors = F, colors = rainbow(length(1:3)))
+```
+
+##計算詞頻
+```{r}
+#install.packages("tm")
+library(tm)
+
+s = "大巨蛋案對市府同仁下封口令？柯P否認"
+mixseg = worker()
+segment(code= s , jiebar = mixseg)
+
+e3 = 'Hello, I am David. I have taken over 100 courses ~~~' 
+e3_vec = strsplit(e3, ' ')
+e3_corpus = Corpus(VectorSource(e3_vec))
+e3_dtm = DocumentTermMatrix(e3_corpus)
+inspect(e3_dtm)
+#移除數字
+doc = tm_map(e3_corpus, removeNumbers) 
+#移除標點符號
+doc = tm_map(doc, removePunctuation) 
+dtm = DocumentTermMatrix(doc) 
+inspect(dtm)
+```
+
+##建立英文詞頻矩陣
+```{r}
+e1 = 'this is a book'
+e2 = 'this is my car'
+e1_vec = strsplit(e1, ' ')[[1]]
+e2_vec = strsplit(e2, ' ')[[1]]
+e_vec = list(e1_vec, e2_vec)
+e_corpus = Corpus(VectorSource(e_vec)) 
+e_dtm = DocumentTermMatrix(e_corpus)
+```
+
+# 抓取Google Search的realtime
+```{r}
+library(httr)
+library(jsonlite)
+google = GET('https://www.google.com.tw/complete/search?client=serp&gs_rn=64&q=machine&xhr=t')
+get_content = content(google, encoding = 'BIG-5', type = 'text')
+jd = fromJSON(get_content)
+jd
+jd[[2]]
+```
+
+
+
+
