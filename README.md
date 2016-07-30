@@ -15,5 +15,5 @@
 > *請使用 R 語言分析一知名電商網站的商品購買記錄purchase.csv,希望能夠從記錄之中掌握使用者的行為與商品特性。
 > *https://rpubs.com/a5347354/198194
 
-### 2016/07/30 R With TextMining
+## 2016/07/30 R With TextMining
 > *http://rpubs.com/a5347354/199349
