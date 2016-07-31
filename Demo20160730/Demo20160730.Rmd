@@ -213,6 +213,7 @@ segment(code= s , jiebar = mixseg)
 
 e3 = 'Hello, I am David. I have taken over 100 courses ~~~' 
 e3_vec = strsplit(e3, ' ')
+#建立語調庫
 e3_corpus = Corpus(VectorSource(e3_vec))
 e3_dtm = DocumentTermMatrix(e3_corpus)
 inspect(e3_dtm)
