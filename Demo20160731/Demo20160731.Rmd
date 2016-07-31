@@ -184,6 +184,7 @@ article_query(18)[1:10]
 ###文章分群
 ```{r}
 dtm_cluster = hclust(dtm_dist, method="ward.D2")
+plot(dtm_cluster)
 rect.hclust(dtm_cluster, k = 20 , border="red")
 
 fit = cutree(dtm_cluster, k = 20)
@@ -201,12 +202,10 @@ library(jiebaR)
 library(tm)
 source('https://raw.githubusercontent.com/ywchiu/rtibame/master/Lib/CNCorpus.R')
 mixseg = worker()
-news_seg =lapply(as.character(news$content), 
-       function(e)segment(code=e, jiebar=mixseg))
+news_seg =lapply(as.character(news$content),function(e)segment(code=e, jiebar=mixseg))
 
-s_corpus <- CNCorpus(news.seg)
-control_list=list(wordLengths=c(2,Inf),
-        tokenize=space_tokenizer)
+s_corpus <- CNCorpus(news_seg)
+control_list=list(wordLengths=c(2,Inf),tokenize=space_tokenizer)
 s_corpus = tm_map(s_corpus, removeNumbers)
 s_corpus = tm_map(s_corpus, removePunctuation)
 dtm <- DocumentTermMatrix(s_corpus,control=control_list)
