@@ -69,11 +69,164 @@ findAssocs(s_dtm, "非洲", 0.6)
 ###刪除稀疏矩陣
 ####!!!!!!有可能移除到重要的字詞!!!!!!!
 ```{r}
-
 dim(s_dtm)
 dtm_remove = removeSparseTerms(s_dtm, 0.9) 
 dim(dtm_remove)
 dtm_remove$dimnames$Terms
 ```
+
+##抓取FB資訊的爬蟲
+```
+library(httr)
+toekn = ''
+fburl = paste0('',toekn)
+
+library("rjson")
+fb = read_html(fburl)
+fbcontent = GET(fburl)
+fbjson = fromJSON(content(fbcontent,"text"))
+as.data.frame(fbjson)
+name = sapply(fbjson$data, function(e) e$name)
+id = sapply(fbjson$data, function(e) e$id)
+df = data.frame(name = name, id = id)
+```
+
+##聚合式分群方法
+```{r}
+data(iris)
+#拿掉最後一欄Species，並利用計算歐式距離
+iris_dist =dist(iris[,-5], method = "euclidean")
+iris_hclust = hclust(iris_dist, method = "ward.D2")
+plot(iris_hclust)
+
+#使用cutree做分群
+fit = cutree(iris_hclust, k = 3)
+#利用分好的鳶尾花物種，比對結果
+table(fit,iris[,5])
+table(fit)
+#畫出圖
+plot(iris_hclust, hang = -0.1,cex = 0.6)
+#畫出k條分群線
+rect.hclust(iris_hclust,k=4,border = "red")
+
+
+
+#比對原始的圖
+par(mfrow = c(1,2))
+#Original iris scatter plot
+plot(iris$Petal.Length, iris$Petal.Width,col= iris$Species, main = 'original')
+plot(iris$Petal.Length, iris$Petal.Width,col= fit, main = 'clustered')
+```
+
+##分裂式分群
+```{r}
+library(cluster)
+dv = diana(iris[,-5], metric = "euclidean") 
+summary(dv)
+plot(dv)
+```
+
+##文章分群
+###使用 proxy 套件計算cosine similarity
+```{r}
+#install.packages("proxy") 
+library(proxy)
+
+```
+
+###建立詞頻矩陣
+```{r}
+library(jiebaR)
+library(tm)
+source('https://raw.githubusercontent.com/ywchiu/rtibame/master/Lib/CNCorpus.R')
+mixseg = worker()
+apple_seg =lapply(applenews$content,function(e)segment(code=e, jiebar=mixseg))
+
+s_corpus <- CNCorpus(apple_seg) 
+control_list=list(wordLengths=c(2,Inf),tokenize=space_tokenizer)
+
+#tm_map => 去除一些不必要的資料（清理資料）
+s_corpus = tm_map(s_corpus, removeNumbers)
+s_corpus = tm_map(s_corpus, removePunctuation)
+
+dtm <- DocumentTermMatrix(s_corpus,control=control_list)
+dim(dtm)
+
+grep('大巨蛋',applenews$title)
+#dtm_remove = removeSparseTerms(dtm, 0.99)
+```
+
+
+###計算文章相似度
+```{r}
+#移除不重要的資料
+dtm_remove = removeSparseTerms(dtm, 0.99)
+dim(dtm_remove)
+##計算Cos
+dtm_dist = proxy::dist(as.matrix(dtm_remove), method = "cosine")
+dtm_mat = as.matrix(dtm_dist)
+applenews$title[51]
+applenews$title[order(dtm_mat[51,])[2:10]]
+```
+
+###查詢近似新聞
+```{r}
+alike_article_idx =  which(dtm_mat[51,] < 0.5)
+applenews$title[alike_article_idx]
+
+article_query = function(idx){
+  alike_article_idx =  which(dtm_mat[idx,] < 0.8)
+  applenews$title[alike_article_idx]
+}
+article_query(18)[1:10]
+```
+
+###文章分群
+```{r}
+dtm_cluster = hclust(dtm_dist, method="ward.D2")
+rect.hclust(dtm_cluster, k = 20 , border="red")
+
+fit = cutree(dtm_cluster, k = 20)
+applenews$title[fit == 16]
+```
+
+###20150527文章分群
+```{r}
+download.file('https://raw.githubusercontent.com/ywchiu/rtibame/master/History/Class1/news.RData', 'news.RData')
+load('news.RData')
+colnames(news) = c('title', 'content', 'id')
+
+
+library(jiebaR)
+library(tm)
+source('https://raw.githubusercontent.com/ywchiu/rtibame/master/Lib/CNCorpus.R')
+mixseg = worker()
+news_seg =lapply(as.character(news$content), 
+       function(e)segment(code=e, jiebar=mixseg))
+
+s_corpus <- CNCorpus(news.seg)
+control_list=list(wordLengths=c(2,Inf),
+        tokenize=space_tokenizer)
+s_corpus = tm_map(s_corpus, removeNumbers)
+s_corpus = tm_map(s_corpus, removePunctuation)
+dtm <- DocumentTermMatrix(s_corpus,control=control_list)
+dim(dtm)
+
+
+
+dtm_dist = proxy::dist(as.matrix(dtm), method = "cosine")
+
+dtm_cluster = hclust(dtm_dist, method="ward.D2")
+plot(dtm_cluster)
+rect.hclust(dtm_cluster, k = 5 , border="red")
+
+
+fit = cutree(dtm_cluster, k = 5)
+news$title[fit == 1]
+```
+
+
+
+
 
 
