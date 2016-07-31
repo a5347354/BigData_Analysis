@@ -3,6 +3,7 @@
 程式Demo  http://rpubs.com/a5347354/199507
 
 建立中文詞頻矩陣時，會產生錯誤詞頻
+
 解法：使用Function [CNCorpus](https://raw.githubusercontent.com/a5347354/BigData_Analysis/master/Demo20160731/CNCorpus.R)
 
 學習分為演繹和歸納
