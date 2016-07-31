@@ -17,3 +17,6 @@
 
 ## 2016/07/30 R With TextMining
 > *http://rpubs.com/a5347354/199349
+
+## 2016/07/31 R With TextMining Analysis
+> *
