@@ -8,18 +8,72 @@ output: html_document
 ##建立中文詞頻
 ```{r}
 #使用老師寫好的function
-source('https://raw.githubusercontent.com/ywchiu/rtibame/master/Lib/CNCorpus.R')
+source('https://raw.githubusercontent.com/a5347354/BigData_Analysis/master/Demo20160731/CNCorpus.R')
 library(jiebaR)
 mixseg = worker()
-s = "大巨蛋案對市府同仁下封口令?柯P否認"
+s = "大巨蛋案對市府同仁下封口令？柯P否認"
 s1 = "柯P市府近來飽受大巨蛋爭議"
+s2 = "非核家園不是空談柯P要打造台北能源之丘"
 s_vec <- segment(code= s , jiebar = mixseg)
 s1_vec <- segment(code= s1 , jiebar = mixseg)
-s_corpus = CNCorpus(list(s_vec, s1_vec)) control_list=list(wordLengths=c(1,Inf),tokenize=space_tokenizer) 
+s2_vec <- segment(code= s2 , jiebar = mixseg)
+
+s_corpus = CNCorpus(list(s_vec, s1_vec))
+control_list=list(wordLengths=c(1,Inf),tokenize=space_tokenizer) 
 s_dtm <- DocumentTermMatrix(s_corpus, control=control_list) 
 #觀看詞頻矩陣
 inspect(s_dtm)
 #每篇文章的距離
 dist(s_dtm)
 ```
+
+## 向量計算
+```{r}
+v1 = c(1,0,1,0)
+v2 = c(1,0,0,1)
+# Euclidean Distance Calculation
+sqrt(sum((v1 - v2) ^2 ))
+dist(rbind(v1,v2))
+```
+
+##詞頻矩陣應用
+```{r}
+download.file("https://raw.githubusercontent.com/ywchiu/rtibame/master/data/applenews.RData", 'applenews.RData')
+load("applenews.RData")
+#切割字詞
+library(jiebaR) 
+mixseg = worker()
+#lappy一篇一篇文章切，e = applenews$content
+apple_seg =lapply(applenews$content,function(e)segment(code=e, jiebar=mixseg))
+
+
+s_corpus <- CNCorpus(apple_seg) 
+#切割字詞，最小字詞單位為2，最大無上限
+control_list=list(wordLengths=c(2,Inf),tokenize=space_tokenizer)
+s_dtm <- DocumentTermMatrix(s_corpus,control=control_list) 
+dim(s_dtm)
+
+#尋找詞頻介於200~300的詞
+freq_term = findFreqTerms(s_dtm, 200,300)
+
+freq_term = findFreqTerms(s_dtm, 150,Inf)
+inspect(s_dtm[1:5, freq_term])
+
+#尋找與”大巨蛋”相關係數大於0.7的詞
+findAssocs(s_dtm, "大巨蛋", 0.7)
+findAssocs(s_dtm, "非洲", 0.6)
+
+
+```
+
+###刪除稀疏矩陣
+####!!!!!!有可能移除到重要的字詞!!!!!!!
+```{r}
+
+dim(s_dtm)
+dtm_remove = removeSparseTerms(s_dtm, 0.9) 
+dim(dtm_remove)
+dtm_remove$dimnames$Terms
+```
+
 
