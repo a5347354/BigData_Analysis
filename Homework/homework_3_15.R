@@ -1,12 +1,3 @@
----
-title: "Homework_2_20160723"
-author: "Luke Fan"
-date: "2016年8月3日"
-output: html_document
----
-# Homework 3
-##請使用 R 語言分析黃國昌的Facebook 貼文訊息 (kcfor2016.RData)
-```{r}
 # (https://rpubs.com/a5347354/200105)
 library(rvest)
 download.file('https://raw.githubusercontent.com/ywchiu/rtibame/master/Data/kcfor2016_utf8.csv', 'kcfor2016_utf8.csv')
@@ -39,6 +30,3 @@ candicate
 library(wordcloud2)
 #轉換成table後產生文字雲
 wordcloud2(as.table(candicate),shape = 'star',size = 3)
-
-```
-

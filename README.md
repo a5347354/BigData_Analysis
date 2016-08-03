@@ -24,5 +24,6 @@
  - http://rpubs.com/a5347354/199507
 
 
- ### 2016/07/17 R Homework 3 With TextMining
+ ### 2016/08/03 R Homework 3 With TextMining
+ - 請使用 R 語言分析黃國昌的Facebook 貼文訊息 (kcfor2016.RData)
  - https://rpubs.com/a5347354/200105
