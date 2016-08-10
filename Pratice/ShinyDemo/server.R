@@ -31,6 +31,7 @@ shinyServer(
       gvisPieChart(data,option=list(slices="{1:{offset:0.2}}"))
     })
     
+    #Plotly-長方圖
     kwd_plot = reactive({ 
       kwd <- kwd()
       if(kwd == '') 
@@ -49,6 +50,11 @@ shinyServer(
                     options=list(height=415))
       } 
     })
+    
+    
+    
+    
+    
     
     # Output
     output$newstable <- 

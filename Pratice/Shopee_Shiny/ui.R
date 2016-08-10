@@ -5,9 +5,7 @@ shinyUI(
     
     #第二層
     fluidRow(
-      column(3,
-            dateRangeInput("dates", label = h3("Date range"))
-      ),column(8,
+      column(8,
                wellPanel(
                  h4('Keyword Volume:'), 
                  br(), 
@@ -18,14 +16,18 @@ shinyUI(
     ),
     
     
+    
+    
     #第三層
     splitLayout(cellWidths = c("30%","70%"),
-      dateRangeInput("dates", label = h3("Date range")),
+      dateRangeInput("dates", label = h3("Date range"),start = "2016-07-10"),
+      
+      
         # Tab標籤
         tabsetPanel(
-          tabPanel("Plot", plotOutput("plot")), 
+          tabPanel("各小時訂單分佈",  plotlyOutput("plotly")), 
           tabPanel("Summary", verbatimTextOutput("summary")), 
-          tabPanel("Table", tableOutput("itemtable"))
+          tabPanel("訂單", tableOutput("itemtable"))
         ) 
     
     )
