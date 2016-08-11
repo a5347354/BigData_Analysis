@@ -1,3 +1,5 @@
+library(plotly)
+library(shiny)
 shinyUI(
   fluidPage( 
     #第一層
@@ -25,8 +27,8 @@ shinyUI(
       
         # Tab標籤
         tabsetPanel(
-          tabPanel("各小時訂單分佈",  plotlyOutput("plotly")), 
-          tabPanel("Summary", verbatimTextOutput("summary")), 
+          tabPanel("Summary",plotlyOutput("plotly_markers")), 
+          tabPanel("各小時訂單分佈",plotlyOutput("plotly_rect")), 
           tabPanel("訂單", tableOutput("itemtable"))
         ) 
     
