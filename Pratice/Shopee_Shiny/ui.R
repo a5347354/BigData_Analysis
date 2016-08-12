@@ -7,13 +7,21 @@ shinyUI(
     
     #第二層
     fluidRow(
-      column(8,
-               wellPanel(
-                 h4('Keyword Volume:'), 
-                 br(), 
-                 textInput("keyword",
-                           "Search", width='250px', placeholder="品客" ),
-                 htmlOutput("volume") )
+      splitLayout(cellWidths = c("30%","70%"),
+        wellPanel(
+          h4('Filter:'), 
+          checkboxGroupInput("categories",
+                             "Category", 
+                             categories,
+                             selected = categories)
+        ),
+        wellPanel(
+          h4('Keyword Volume:'), 
+          br(), 
+          textInput("keyword",
+                     "Search", width='250px', placeholder="品客" ),
+          htmlOutput("volume") 
+        )
       )
     ),
     
@@ -29,6 +37,7 @@ shinyUI(
         tabsetPanel(
           tabPanel("Summary",plotlyOutput("plotly_markers")), 
           tabPanel("各小時訂單分佈",plotlyOutput("plotly_rect")), 
+          tabPanel("各產品銷量及銷售額",plotlyOutput("plotly_bar")),
           tabPanel("訂單", tableOutput("itemtable"))
         ) 
     
