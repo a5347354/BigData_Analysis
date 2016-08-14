@@ -1,0 +1,274 @@
+---
+title: "Demo20160814"
+author: "Luke Fan"
+date: "2016年8月14日"
+output: html_document
+---
+## 使用rpart做分類
+### 決策樹
+```{r}
+library(rpart)
+data(iris)
+#目標放在左邊Secies，變量放右邊
+fit <- rpart(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data= iris)
+fit
+plot(fit, margin = 0.1)
+text(fit)
+```
+### 結果驗證
+```{r}
+plot(iris$Petal.Length, iris$Petal.Width)
+plot(iris$Petal.Width, iris$Petal.Width,col = iris$Species)
+fit
+abline(v=2.45,col="blue")
+abline(h=1.75,col="orange")
+```
+
+##產分分類結果，產生混淆矩陣
+```{r}
+predict(fit, data.frame(Petal.Length = 1, Petal.Width = 1, Sepal.Length = 1, Sepal.Width = 1))
+
+#類別
+predict(fit, iris[,-5],type = 'class')
+#機率
+predict(fit, iris[,-5],type = 'prob')
+
+#產生混淆矩陣
+cm = table(iris[,5], predict(fit, iris[,-5], type='class'))
+```
+
+## 計算預測準確率
+```{r}
+ac = (50+49+45)/(50+50+50)
+#install.packages('caret')
+library(e1071)
+library(caret)
+confusionMatrix(cm)
+```
+
+
+## 分為訓練與測試資料集
+```{r}
+set.seed(123)
+.Random.seed
+sample.int(42,6)
+
+ind = sample(c(1,2),150,replace = TRUE, prob = c(0.7,0.3))
+ind == 1
+trainset = iris[ind == 1,]
+testset = iris[ind == 2,]
+```
+
+## 使用訓練資料集建立模型
+```{r}
+#.把所有欄位加入
+fit2 = rpart(Species ~ . ,data = trainset)
+plot(fit2,margin=0.1)
+text(fit2)
+plot(trainset$Petal.Length,trainset$Petal.Width)
+#放上顏色
+plot(trainset$Petal.Length,trainset$Petal.Width,col=trainset$Species)
+fit
+#畫線
+abline(v= 2.45, col="blue")
+abline(v= 4.75, col="orange")
+```
+
+##使用測試資料及驗證模型
+```{r}
+#計算訓練模型的混淆矩陣
+trainpred <- predict(fit2, trainset[,-5], type= "class")
+traincm <- table(trainpred, trainset[,5])
+confusionMatrix(traincm)
+
+#計算測試模型的混淆矩陣
+testpred <- predict(fit2, testset[,-5], type= "class")
+#產生矩陣
+testcm <- table(testpred, testset[,5])
+confusionMatrix(testcm)
+```
+
+
+## cross validation，使用caret套件
+```{r}
+library(caret)
+fitControl <- trainControl(## 10-fold CV
+                           method = "repeatedcv",
+                           number = 10,
+                           repeats = 10)
+rpartFit <- train(Species ~ ., data = iris,
+                 method = "rpart",
+                 trControl = fitControl)
+rpartFit
+
+
+cm = table(predict(rpartFit, iris), iris[,5])
+confusionMatrix(cm)
+```
+
+## 客戶流失分析
+###讀取資料
+```{r}
+#install.packages("C50")
+library(C50)
+data(churn)
+str(churnTrain)
+#拿掉區碼、區域等欄位
+churnTrain = churnTrain[,! names(churnTrain) %in% c("state", "area_code", "account_length") ]
+set.seed(2)
+#分割資料
+ind <- sample(2, nrow(churnTrain), replace = TRUE, prob=c(0.7, 0.3)) 
+trainset = churnTrain[ind == 1,]
+testset = churnTrain[ind == 2,]
+```
+
+##建立分類樹
+```{r}
+library(rpart)
+#建立分類樹
+churn_rp <- rpart(churn ~ ., data=trainset)
+#畫出圖
+plot(churn_rp, margin= 0.1) 
+text(churn_rp, all=TRUE, use.n = TRUE)
+```
+
+## 產生Confusion Matrix
+```{r}
+#製作混淆矩陣觀察
+pred = predict(churn_rp,testset,type = "class")
+table(testset$churn,pred)
+library(caret)
+confusionMatrix(cm)
+
+```
+
+##剪枝
+```{r}
+#值越低，代表越能將Yes/No切開來
+min(churn_rp$cptable[,"xerror"]) 
+which.min(churn_rp$cptable[,"xerror"])
+#只留7個分枝
+churn_cp = churn_rp$cptable[7,"CP"] 
+prune_tree = prune(churn_rp, cp= churn_cp) 
+plot(prune_tree, margin= 0.1) 
+text(prune_tree, all=TRUE , use.n=TRUE)
+``` 
+
+##手工製作ROC Curve
+```{r}
+head(predict(churn_rp, testset, type="prob"))
+x = c()
+y = c()
+for (threshold in seq(0.1,0.9,0.1)){
+  yes = predict(churn_rp, testset, type="prob")[,1]
+  pred = ifelse(yes > threshold, 0, 1)
+  pred = factor(pred, labels =c('yes', 'no'))
+  ct = table(pred, testset$churn)
+  cm = confusionMatrix(ct)
+  y = c(y, cm$byClass[1])
+  x = c(x, 1 - cm$byClass[2])
+}
+
+plot(x,y)
+lines(x,y, col="red")
+```
+
+##使用套件產生ROC Curve
+```{r}
+library(ROCR)
+predictions <- predict(churn_rp, testset, type="prob")
+
+yes <- predictions[, 1]
+pred_rocr <- prediction(yes, as.factor(testset[,(dim(testset)[[2]])])) 
+perf_rocr <- performance(pred_rocr, measure = "auc", x.measure = "cutoff")
+#產生圖
+perf_tpr_rocr <- performance(pred_rocr, "tpr","fpr")
+plot(perf_tpr_rocr, colorize=T,main=paste("AUC:",(perf_rocr@y.values)))
+```
+
+#新聞分類
+##讀取資料集
+```{r}
+download.file('https://raw.githubusercontent.com/ywchiu/rtibame/master/Data/appledaily.RData', 'appledaily.RData')
+load('appledaily.RData')
+apple_subset = appledaily[appledaily$category %in% c('財經','娛樂','社會'),]
+table(apple_subset$category)
+```
+
+##斷詞
+```{r}
+library(jiebaR)
+mixseg = worker()
+apple_seg =lapply(apple_subset$content, function(e)segment(code=e, jiebar=mixseg))
+```
+
+## 建立詞頻矩陣
+```{r}
+source('https://github.com/ywchiu/rtibame/raw/master/Lib/CNCorpus.R')
+
+doc=CNCorpus(apple_seg)
+doc=unlist(tm_map(doc,jieba_tokenizer),recursive=F) 
+doc=lapply(doc,function(d)paste(d,collapse=' '))
+control_list=list(wordLengths=c(2,Inf),tokenize=space_tokenizer) 
+dtm=DocumentTermMatrix(Corpus(VectorSource(doc)),control=control_list) 
+dim(dtm)
+```
+
+##挑選詞頻大於5的
+```{r}
+ft <- findFreqTerms(dtm, 5)
+control_list=list(wordLengths=c(2,Inf),tokenize=space_tokenizer,dictionary =ft)
+new_dtm=DocumentTermMatrix(Corpus(VectorSource(doc)),control=control_list)
+dim(new_dtm)
+```
+
+##列出是否有對到該詞的，輸出yes/no
+```{r}
+convert_counts <- function(x) {
+  x <- ifelse(x > 0, 1, 0)
+  x <- factor(x, levels = c(0, 1), labels = c("No", "Yes"))
+  return(x) 
+}
+
+dtm_count <- apply(new_dtm, MARGIN = 2, convert_counts)
+```
+##將資料列成為訓練資料及測試資料
+```{r}
+library(e1071)
+#轉型
+m <- as.data.frame(dtm_count)
+#分割資料，分成兩群
+idx <- sample.int(2, nrow(m), replace=TRUE, prob=c(0.7,0.3))
+trainset <- m[idx==1,]
+testset <- m[idx==2,]
+
+traintitle <- apple_subset[idx==1,"title"]
+testtitle <- apple_subset[idx==2,"title"]
+
+traintag <- apple_subset[idx==1,"category"]
+testtag <-apple_subset[idx==2,"category"]
+
+#轉換
+traintag = as.factor(traintag)
+testtag = as.factor(testtag)
+dim(trainset)
+dim(testset)
+```
+
+## 使用Navie Bayes建立模型
+```{r}
+library(e1071)
+model= naiveBayes(trainset, traintag)
+#預測
+pred = predict(model, testset)
+cm = table(pred,testtag)
+```
+
+##檢查異常文章
+```{r}
+testtitle[pred !=testtag]
+pred[pred != testtag]
+which(pred != testtag)
+testtag[pred != testtag]
+```
+

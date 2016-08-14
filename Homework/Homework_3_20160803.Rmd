@@ -42,3 +42,31 @@ wordcloud2(as.table(candicate),shape = 'star',size = 3)
 
 ```
 
+## 篩選出中文範圍str_match(x,'[\u4e00-\u9fa5]') (中文的unicode的範圍)
+```{r}
+library(stringr)
+str_match('文123字雲','[\u4e00-\u9fa5]+')
+```
+
+## 老師解答
+```{r}
+library(rvest)
+download.file('https://raw.githubusercontent.com/ywchiu/rtibame/master/Data/kcfor2016_utf8.csv', 'kcfor2016_utf8.csv')
+kcfor2016_uft8 = read.csv(file = 'kcfor2016_utf8.csv')
+mixseg = worker()
+kcfor2016_uft8$message = as.character(kcfor2016_uft8$message)
+message_seg = lapply(kcfor2016_uft8$message, function(m) segment(code = m, jiebar=mixseg))
+message_seg[[1]]
+
+words = unlist(message_seg)
+word_tb = table(words)
+word_tb = word_tb[nchar(names(word_tb)) >= 2 & word_tb >=20]
+
+# 用str_match篩選中文詞彙 [\u4e00-\u9fa5]
+library(stringr)
+word_tb = word_tb[!is.na(str_match(names(word_tb), '[\u4e00-\u9fa5]+'))]
+library(wordcloud2)
+
+wordcloud2(as.table(word_tb))
+```
+
