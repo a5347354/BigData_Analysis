@@ -1,0 +1,29 @@
+---
+title: "Practice"
+author: "Luke Fan"
+date: "2016年8月16日"
+output: html_document
+---
+##抓取蝦皮資料
+```{r}
+library(jsonlite)
+menu = fromJSON('http://mall.shopee.tw/search/api/items/?page_type=search&match_id=2209&keyword=%E9%80%B2%E5%8F%A3%E9%9B%B6%E9%A3%9F&shop_categoryids=&hashtag=&facet_type=&by=pop&order=desc&newest=0&limit=20&need_drop_word=false')
+```
+##資料處理
+```{r}
+# menu$items
+# name 商品名稱
+# price / 100000 價錢
+# rating_good 評價
+# liked_count 讚數
+# rating_star 廠商評價
+# stock 存貨
+items = menu$items[c('name','price','stock','rating_good','liked_count','rating_star')]
+```
+
+
+```{r}
+items[grepl('韓國',orders_selected$商品資訊),]
+```
+
+
