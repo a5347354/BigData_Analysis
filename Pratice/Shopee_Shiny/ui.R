@@ -8,7 +8,7 @@ shinyUI(
     tabsetPanel(
       tabPanel("銷售",
         fluidRow(
-          splitLayout(cellWidths = c("30%","70%"),
+          splitLayout(cellWidths = c("10%","40%","50%"),
             wellPanel(
               h4('Filter:'), 
               checkboxGroupInput("categories",
@@ -22,39 +22,48 @@ shinyUI(
               textInput("keyword",
                          "Search", width='250px', placeholder="品客" ),
               htmlOutput("volume_order") 
+            ),
+            wellPanel(
+              dateRangeInput("dates", label = h3("Date range"),start = "2016-07-10")
             )
           )
         ),
       
         
         #第三層
-        splitLayout(cellWidths = c("30%","70%"),
-          dateRangeInput("dates", label = h3("Date range"),start = "2016-07-10"),
-          
+        splitLayout(cellWidths = c("95%"),
           # Tab標籤
           tabsetPanel(
             tabPanel("Summary",plotlyOutput("plotly_markers")), 
             tabPanel("各小時訂單分佈",plotlyOutput("plotly_rect")), 
-            tabPanel("各產品銷量及銷售額",plotlyOutput("plotly_bar")),
+            tabPanel("各產品銷量及銷售額",plotlyOutput("plotly_markers_indiv")),
             tabPanel("訂單", tableOutput("itemtable"))
           ) 
         )
       ),
       
       
+      
+      
+      
       tabPanel("熱銷商品",
                fluidRow(
-                 wellPanel(
-                   h4('Keyword Volume:'), 
-                   br(), 
-                   textInput("marketplace_keyword",
-                             "Search", width='250px', placeholder="品客" ),
-                   htmlOutput("marketplace_volume") 
-                 ),
-                 tableOutput("marketplace_table"),
-                 plotlyOutput("market_plotly_bar")
+                 column(12,
+                   wellPanel(
+                     h4('Keyword Volume:'), 
+                     br(), 
+                     textInput("marketplace_keyword",
+                               "Search", width='250px', placeholder="品客" ),
+                     htmlOutput("marketplace_volume") 
+                   ),
+                   tabsetPanel(
+                        tabPanel("表單",dataTableOutput("marketplace_table")),
+                        tabPanel("圖表",plotlyOutput("market_plotly_bar"))
+                   )
+                 )
                )
-              )
+                 
+      )
     )
   )
 )
